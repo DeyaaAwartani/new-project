@@ -1,0 +1,22 @@
+### add order for  user
+POST http://localhost:3030/orders
+Content-Type: application/json 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRleWFhd29yazU0QGdtYWlsLmNvbSIsInN1YiI6MSwicm9sZSI6InVzZXIiLCJpYXQiOjE3Njg0ODIyMjAsImV4cCI6MTc2ODQ4MzEyMH0.kjjInZn2VahcSwCcEamqCVMb0qskIkZB4QUzdaWWuws
+
+{
+  "productId": 1
+}
+
+//--------------------------------------------test for admin ---------------------------------//
+### find all orders (admin)
+GET http://localhost:3030/orders?page=1&limit=40
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6Miwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzY4NDYyNjE4LCJleHAiOjE3Njg0NjM1MTh9.APivfR1YYigNWg4VFSIlt6TGRyICu1LTUQXTz_3sDG4
+
+
+### approve order (admin)
+POST http://localhost:3030/orders/5/approve
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6Miwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzY4NDYyNjE4LCJleHAiOjE3Njg0NjM1MTh9.APivfR1YYigNWg4VFSIlt6TGRyICu1LTUQXTz_3sDG4
+
+### reject order (admin)
+POST http://localhost:3030/orders/4/reject
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6Miwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzY4Mzc5OTMxLCJleHAiOjE3NjgzODA4MzF9.m1iAzkt2nD_ScAns8NzoQb-CwLWHkRHk8Bze844HP0E

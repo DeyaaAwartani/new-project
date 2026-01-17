@@ -1,0 +1,9 @@
+### add products 
+POST http://localhost:3030/products
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6Miwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzY4MzE2NzMzLCJleHAiOjE3NjgzMTc2MzN9.93j0Z7vMZeJsayFeG7l1N6k1H-Rcvj0HvM-LAlrIa8E
+
+{
+  "label": "air",
+  "price": 50
+}

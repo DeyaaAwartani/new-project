@@ -1,0 +1,8 @@
+## create credit for users
+POST http://localhost:3030/wallet/1/add-credits
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6Miwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzY4NDgwNjE2LCJleHAiOjE3Njg0ODE1MTZ9.zKsZYL5uaYAe8IFhoxnrmD2CsAH2NIo7PrMRQDaGulE
+
+{
+  "amount": 10000
+  }

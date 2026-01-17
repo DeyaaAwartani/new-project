@@ -1,0 +1,10 @@
+## create Admin
+POST http://localhost:3030/admin/create
+Content-Type: application/json
+
+{
+  "email": "admin@gmail.com",
+  "password": "admin1",
+  "firstName": "admin1",
+  "lastName": "admin1"
+}
