@@ -14,11 +14,11 @@ export class OrderAutoApproveJob {
 
   constructor(private readonly dataSource: DataSource) {}
 
-  // every minute for test
-  @Cron('*/1 * * * *')
+  // every 40 minute for test
+  @Cron('*/40 * * * *')
   async handleAutoApprove() {
     const now = Date.now();
-    const cutoff = new Date(now - 60 * 1000); // the original (ONE_DAY_MS) for test 1 mint
+    const cutoff = new Date(now - ONE_DAY_MS); // the original (ONE_DAY_MS) for test 1 mint 60 * 1000
 
     //get limit (100)
     const orderRepo = this.dataSource.getRepository(Order);

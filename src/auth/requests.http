@@ -9,12 +9,12 @@ Content-Type: application/json
   "lastName": "othman"
 }
 
-### register user
+### signin email: admin , pass: admin1 
 POST http://localhost:3030/auth/login
 Content-Type: application/json
 
 {
-  "email": "deyaawork54@gmail.com",
-  "password": "123456"
+  "email": "admin@gmail.com",
+  "password": "admin1"
 }
 

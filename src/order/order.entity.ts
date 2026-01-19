@@ -10,6 +10,7 @@ import { User } from 'src/users/users.entity';
 import { Product } from 'src/products/products.entity';
 import { AutoFailureReason } from './enums/auto-failure-reason.enum';
 import { ApprovedByType } from './enums/approved-by-type.enum';
+import { NotificationStatus } from './enums/notification-status.enum';
 
 @Entity('orders')
 export class Order {
@@ -42,6 +43,13 @@ export class Order {
     default: OrderStatus.PENDING,
   })
   status: OrderStatus;
+
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.NOT_SENT,
+  })
+  notificationStatus: NotificationStatus;
 
   @Column({ type: 'enum', enum: ApprovedByType, nullable: true })
   approvedByType: ApprovedByType | null;
