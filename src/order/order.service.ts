@@ -17,6 +17,8 @@ import { NotificationStatus } from './enums/notification-status.enum';
 import { User } from 'src/users/users.entity';
 import { Product } from 'src/products/products.entity';
 import { ApprovedByType } from './enums/approved-by-type.enum';
+import { UsersSettings } from 'src/users-settings/entities/users-setting.entity';
+import { NotificationPreference } from 'src/users-settings/enums/notification-preference.enum';
 
 @Injectable()
 export class OrderService {
@@ -126,42 +128,117 @@ export class OrderService {
       return orderRepo.save(order);
     });
 
-    const [user, product] = await Promise.all([
-    this.dataSource.getRepository(User).findOne({ where: { id: approvedOrder.userId } }),
-    this.dataSource.getRepository(Product).findOne({ where: { id: approvedOrder.productId } }),
-  ]);
+    const [user, product, settings] = await Promise.all([
+      this.dataSource
+        .getRepository(User)
+        .findOne({ where: { id: approvedOrder.userId } }),
+      this.dataSource
+        .getRepository(Product)
+        .findOne({ where: { id: approvedOrder.productId } }),
+      this.dataSource
+        .getRepository(UsersSettings)
+        .findOne({ where: { userId: approvedOrder.userId } }),
+    ]);
 
-  // if user not exist make it not sent
-  if (!user) {
-    approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
-    return this.orderRepo.save(approvedOrder);
-  }
+    if (!user) {
+      approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
+      return this.orderRepo.save(approvedOrder);
+    }
 
-  // if email not exist make it no contact
-  if (!user.email) {
-    approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
-    return this.orderRepo.save(approvedOrder);
-  }
+    // If we find no settings for any reason, consider it to be EMAIL (logical default).
+    const preference =
+      settings?.notificationPreference ?? NotificationPreference.EMAIL;
 
-  // try to send notification 
-  try {
-    const productName = product ? product.label ?? `Product #${approvedOrder.productId}` : `Product #${approvedOrder.productId}`;
+    const productName = product?.label ?? `Product #${approvedOrder.productId}`;
 
-    await this.notificationClient.sendEmail({
+    //TEMPLATE
+    const emailPayload = {
       toEmail: user.email,
       title: 'Purchase Successful',
-      message: `Your request has been successfully approved. Request number: ${approvedOrder.id}. product: ${productName}.`,
-      ccList: [],
-      bccList: [],
-    });
+      template: 'purchase-success',
+      templateData: {
+        orderId: approvedOrder.id,
+        productLabel: productName,
+        amount: approvedOrder.amount,
+      },
+    };
 
-    approvedOrder.notificationStatus = NotificationStatus.SENT;
-  } catch (err) {
+    // None
+    if (preference === NotificationPreference.NONE) {
+      approvedOrder.notificationStatus = NotificationStatus.SKIPPED;
+      return this.orderRepo.save(approvedOrder);
+    }
+
+    // Email
+    if (preference === NotificationPreference.EMAIL) {
+      if (!user.email) {
+        approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
+        return this.orderRepo.save(approvedOrder);
+      }
+
+      try {
+        await this.notificationClient.sendEmail(emailPayload);
+        approvedOrder.notificationStatus = NotificationStatus.SENT;
+      } catch {
+        approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
+      }
+
+      return this.orderRepo.save(approvedOrder);
+    }
+
+    // SMS
+    if (preference === NotificationPreference.SMS) {
+      const phoneNumber = user.phoneNumber;
+      // phone number must not be "" or null or undefined
+      if (!phoneNumber) {
+        approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
+        return this.orderRepo.save(approvedOrder);
+      }
+
+      const smsPayload = {
+        toPhoneNumber: phoneNumber,
+        message: `Purchase successful. Order: ${approvedOrder.id}. Product: ${productName}.`,
+      };
+
+      try {
+        await this.notificationClient.sendSms(smsPayload);
+        approvedOrder.notificationStatus = NotificationStatus.SENT;
+      } catch {
+        approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
+      }
+
+      return this.orderRepo.save(approvedOrder);
+    }
+
+    // All
+    if (preference === NotificationPreference.ALL) {
+      const phoneNumber = user.phoneNumber;
+      if (!user.email || !phoneNumber) {
+        approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
+        return this.orderRepo.save(approvedOrder);
+      }
+
+      const smsPayload = {
+        toPhoneNumber: phoneNumber,
+        message: `Purchase successful. Order: ${approvedOrder.id}. Product: ${productName}.`,
+      };
+
+      try {
+        await Promise.all([
+          this.notificationClient.sendEmail(emailPayload),
+          this.notificationClient.sendSms(smsPayload),
+        ]);
+        approvedOrder.notificationStatus = NotificationStatus.SENT;
+      } catch {
+        approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
+      }
+
+      return this.orderRepo.save(approvedOrder);
+    }
+
+    // احتياط
     approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
-  }
-
-  // save changes in NotificationStatus
-  return this.orderRepo.save(approvedOrder);
+    return this.orderRepo.save(approvedOrder);
   }
 
   async adminRejectOrder(orderId: number): Promise<Order> {

@@ -8,6 +8,7 @@ import { WalletModule } from 'src/wallet/wallet.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { OrderAutoApproveJob } from './jobs/order-auto-approve.job';
 import { NotificationClientModule } from 'src/common/notification-client/notification-client.module';
+import { OrderNotificationCron } from './jobs/order-notification.cron';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { NotificationClientModule } from 'src/common/notification-client/notific
     NotificationClientModule,
   ],
   controllers: [OrderController],
-  providers: [OrderService, OrderAutoApproveJob],
+  providers: [OrderService, OrderAutoApproveJob, OrderNotificationCron],
   exports: [OrderService, TypeOrmModule],
 })
 export class OrderModule {}

@@ -15,6 +15,8 @@ import { UserWalletSubscriber } from './subscribers/user-wallet.subscriber';
 import { OrderModule } from './order/order.module';
 import { Order } from './order/order.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UsersSettingsModule } from './users-settings/users-settings.module';
+import { UsersSettings } from './users-settings/entities/users-setting.entity';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       username: process.env.DB_USERNAME || 'root',
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'dev',
-      entities: [User, Product, Wallet, Order],
+      entities: [User, Product, Wallet, Order, UsersSettings],
       synchronize: true,
       subscribers: [UserWalletSubscriber],
     }),
@@ -40,6 +42,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     WalletModule,
     OrderModule,
     AdminModule,
+    UsersSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { DataSource, LessThanOrEqual, Repository } from 'typeorm';
 import { Order } from '../order.entity';
 import { Wallet } from '../../wallet/wallet.entity';
@@ -15,7 +15,7 @@ export class OrderAutoApproveJob {
   constructor(private readonly dataSource: DataSource) {}
 
   // every 40 minute for test
-  @Cron('*/40 * * * *')
+  @Cron(CronExpression.EVERY_5_HOURS)
   async handleAutoApprove() {
     const now = Date.now();
     const cutoff = new Date(now - ONE_DAY_MS); // the original (ONE_DAY_MS) for test 1 mint 60 * 1000

@@ -1,7 +1,17 @@
+import { IsEmail, IsNotEmpty, IsObject, IsString } from 'class-validator';
+
 export class SendEmailDto {
+  @IsEmail()
   toEmail: string;
+
+  @IsString()
+  @IsNotEmpty()
   title: string;
-  message: string;
-  ccList?: string[];
-  bccList?: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  template: string;
+
+  @IsObject()
+  templateData: Record<string, any>;
 }

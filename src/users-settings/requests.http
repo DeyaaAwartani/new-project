@@ -1,0 +1,8 @@
+## create credit for users
+PATCH  http://localhost:3030/users-settings/me
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhbXphQGdtYWlsLmNvbSIsInN1YiI6NSwicm9sZSI6InVzZXIiLCJpYXQiOjE3Njg5MDc3MjMsImV4cCI6MTc2ODkwODYyM30._687XbuHPaz0mvr3OVnfwAhS3vvCgobnw1tFqFtYfYQ
+
+{
+  "notificationPreference": "NONE"
+}
