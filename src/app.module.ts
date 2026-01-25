@@ -17,6 +17,10 @@ import { Order } from './order/order.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UsersSettingsModule } from './users-settings/users-settings.module';
 import { UsersSettings } from './users-settings/entities/users-setting.entity';
+import { ServiceCategoriesModule } from './service_categories/service_categories.module';
+import { ServicesModule } from './services/services.module';
+import { ServiceTypesModule } from './service_types/service_types.module';
+import { ServicePricingModule } from './service_pricing/service_pricing.module';
 
 @Module({
   imports: [
@@ -32,7 +36,8 @@ import { UsersSettings } from './users-settings/entities/users-setting.entity';
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'dev',
       entities: [User, Product, Wallet, Order, UsersSettings],
-      synchronize: true,
+      autoLoadEntities: true,
+      synchronize: false,
       subscribers: [UserWalletSubscriber],
     }),
     ScheduleModule.forRoot(),
@@ -43,6 +48,10 @@ import { UsersSettings } from './users-settings/entities/users-setting.entity';
     OrderModule,
     AdminModule,
     UsersSettingsModule,
+    ServiceCategoriesModule,
+    ServicesModule,
+    ServiceTypesModule,
+    ServicePricingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
