@@ -20,11 +20,16 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.usersRepository.findOne({
-      where: { email: createUserDto.email }, 
+      where: { email: createUserDto.email },
     });
 
     if (existingUser) {
       throw new ConflictException('Email already exists');
+    }
+
+    if (createUserDto.phoneNumber?.startsWith('07')) {
+      createUserDto.phoneNumber =
+        '+962' + createUserDto.phoneNumber.substring(1); // skip first number start with second
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
@@ -82,6 +87,8 @@ export class UsersService {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
 
+    updateUserDto.phoneNumber = normalizeJordanPhone(updateUserDto.phoneNumber);//normalizePhone
+
     Object.assign(user, updateUserDto);
     return this.usersRepository.save(user);
   }
@@ -110,3 +117,7 @@ export class UsersService {
     });
   }
 }
+function normalizeJordanPhone(phoneNumber: any): string | undefined {
+  throw new Error('Function not implemented.');
+}
+

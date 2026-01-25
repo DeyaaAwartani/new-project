@@ -3,11 +3,11 @@ POST http://localhost:3030/auth/register
 Content-Type: application/json
 
 {
-  "email": "ahmad@gmail.com",
+  "email": "rama195272@gmail.com",
   "password": "123456",
-  "firstName": "hamza",
-  "lastName": "othman",
-  "phoneNumber": "0789529271"
+  "firstName": "rama",
+  "lastName": "asad",
+  "phoneNumber": "0785961"
 }
 
 ### signin email: admin , pass: admin1 

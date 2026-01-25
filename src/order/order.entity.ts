@@ -11,6 +11,7 @@ import { Product } from 'src/products/products.entity';
 import { AutoFailureReason } from './enums/auto-failure-reason.enum';
 import { ApprovedByType } from './enums/approved-by-type.enum';
 import { NotificationStatus } from './enums/notification-status.enum';
+import { NotificationAttemptStatus } from './enums/notification-attempt-status.enum';
 
 @Entity('orders')
 export class Order {
@@ -50,6 +51,16 @@ export class Order {
     default: NotificationStatus.NOT_SENT,
   })
   notificationStatus: NotificationStatus;
+
+  @Column({
+    type: 'enum',
+    enum: NotificationAttemptStatus,
+    default: NotificationAttemptStatus.PENDING,
+  })
+  notificationAttemptStatus: NotificationAttemptStatus;
+
+  @Column({ type: 'longtext', nullable: true })
+  notificationFailureReason: string | null;
 
   @Column({ type: 'enum', enum: ApprovedByType, nullable: true })
   approvedByType: ApprovedByType | null;

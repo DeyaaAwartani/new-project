@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail()
@@ -13,4 +20,12 @@ export class CreateUserDto {
 
   @IsString()
   lastName: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^07\d{8}$/, {
+    message:
+      'phoneNumber must be Jordanian local format: 07XXXXXXXX (10 digits)',
+  })
+  phoneNumber?: string;
 }
