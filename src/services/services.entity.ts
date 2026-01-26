@@ -6,8 +6,9 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
-import { ServiceCategoryEntity } from 'src/service_categories/service_categories.entity'; 
+import { ServiceCategoryEntity } from 'src/service_categories/service_categories.entity';
 import { ServiceTypeEntity } from 'src/service_types/service_types.entity';
 
 @Entity('services')
@@ -15,7 +16,13 @@ export class ServiceEntity {
   @PrimaryGeneratedColumn()
   id: string;
 
-  @ManyToOne(() => ServiceCategoryEntity, (c) => c.services, { onDelete: 'RESTRICT' })
+  @Column({ type: 'int' })
+  categoryId: number;
+
+  @ManyToOne(() => ServiceCategoryEntity, (c) => c.services, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'categoryId' })
   category: ServiceCategoryEntity;
 
   @Column({ type: 'varchar', length: 160 })
