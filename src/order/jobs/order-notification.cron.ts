@@ -24,7 +24,6 @@ export class OrderNotificationCron {
     private readonly notificationClient: NotificationClientService,
   ) {}
 
-  // every 50 minutes
   @Cron(CronExpression.EVERY_5_HOURS)
   async retryNotSentNotifications() {
     const batchSize = 10;

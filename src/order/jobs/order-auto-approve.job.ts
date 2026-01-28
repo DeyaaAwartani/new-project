@@ -14,7 +14,6 @@ export class OrderAutoApproveJob {
 
   constructor(private readonly dataSource: DataSource) {}
 
-  // every 40 minute for test
   @Cron(CronExpression.EVERY_5_HOURS)
   async handleAutoApprove() {
     const now = Date.now();

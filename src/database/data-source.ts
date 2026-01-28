@@ -1,10 +1,12 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
+import { CustomNamingStrategy } from './naming.strategy';
 
 config(); // read .env
 
 export const AppDataSource = new DataSource({
+  namingStrategy: new CustomNamingStrategy(),
   type: 'mysql',
   host: process.env.DB_HOST || 'localhost',
   port: Number(process.env.DB_PORT || 3306),
