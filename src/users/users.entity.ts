@@ -9,6 +9,7 @@ import { UserRole } from '../auth/enums/user-role.enum';
 import { Wallet } from 'src/wallet/wallet.entity';
 import { Order } from 'src/order/order.entity';
 import { UsersSettings } from 'src/users-settings/entities/users-setting.entity';
+import { UserInteraction } from 'src/user-interaction/entities/user-interaction.entity';
 
 @Entity('users')
 export class User {
@@ -21,14 +22,17 @@ export class User {
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
-  @Column({ unique: true })
-  email: string;
-
   @Column({ type: 'varchar', length: 30, nullable: true, unique: true })
   phoneNumber: string | null;
 
   @OneToOne(() => UsersSettings, (settings) => settings.user)
   settings: UsersSettings;
+
+  @OneToMany(() => UserInteraction, (interaction) => interaction.user)
+  interactions: UserInteraction[];
+
+  @Column({ unique: true })
+  email: string;
 
   @Column()
   password: string;

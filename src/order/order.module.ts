@@ -9,6 +9,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { OrderAutoApproveJob } from './jobs/order-auto-approve.job';
 import { NotificationClientModule } from 'src/common/notification-client/notification-client.module';
 import { OrderNotificationCron } from './jobs/order-notification.cron';
+import { NotificationsQueueModule } from 'src/notifications-queue/notifications-queue.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { OrderNotificationCron } from './jobs/order-notification.cron';
     WalletModule,
     AuthModule,
     NotificationClientModule,
+    NotificationsQueueModule
   ],
   controllers: [OrderController],
   providers: [OrderService, OrderAutoApproveJob, OrderNotificationCron],

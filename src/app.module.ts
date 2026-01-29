@@ -21,6 +21,10 @@ import { ServiceCategoriesModule } from './service_categories/service_categories
 import { ServicesModule } from './services/services.module';
 import { ServiceTypesModule } from './service_types/service_types.module';
 import { ServicePricingModule } from './service_pricing/service_pricing.module';
+import { UserInteractionModule } from './user-interaction/user-interaction.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { BullModule } from '@nestjs/bullmq';
+import { NotificationsQueueModule } from './notifications-queue/notifications-queue.module';
 
 @Module({
   imports: [
@@ -40,7 +44,15 @@ import { ServicePricingModule } from './service_pricing/service_pricing.module';
       synchronize: false,
       subscribers: [UserWalletSubscriber],
     }),
+    BullModule.forRoot({
+      connection: {
+        host: '127.0.0.1',
+        port: 6379,
+      },
+    }),
+    EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    NotificationsQueueModule,
     AuthModule,
     UsersModule,
     ProductsModule,
@@ -52,6 +64,8 @@ import { ServicePricingModule } from './service_pricing/service_pricing.module';
     ServicesModule,
     ServiceTypesModule,
     ServicePricingModule,
+    UserInteractionModule,
+    NotificationsQueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

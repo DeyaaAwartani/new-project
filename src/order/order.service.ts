@@ -21,6 +21,11 @@ import { UsersSettings } from 'src/users-settings/entities/users-setting.entity'
 import { NotificationPreference } from 'src/users-settings/enums/notification-preference.enum';
 import { NotificationAttemptStatus } from './enums/notification-attempt-status.enum';
 import { extractAxiosFailureReason } from 'src/common/utils/axios-error.util';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserOrderCreatedEvent } from 'src/common/events/user-order-created.event';
+import { UserPurchaseApprovedEvent } from 'src/common/events/user-purchase-approved.event';
+import { InjectQueue } from '@nestjs/bullmq';
+import { delay, Queue } from 'bullmq';
 
 @Injectable()
 export class OrderService {
@@ -30,6 +35,8 @@ export class OrderService {
     private readonly walletService: WalletService,
     private readonly dataSource: DataSource,
     private readonly notificationClient: NotificationClientService,
+    private readonly eventEmitter: EventEmitter2,
+    @InjectQueue('notifications') private readonly notificationsQueue: Queue,
   ) {}
 
   async creatPendingOrder(userId: number, productId: number) {
@@ -59,7 +66,14 @@ export class OrderService {
       status: OrderStatus.PENDING,
       approvedAt: null,
     });
-    return this.orderRepo.save(order);
+
+    const saved = await this.orderRepo.save(order);
+    this.eventEmitter.emit(
+      'user.order_created',
+      new UserOrderCreatedEvent(userId),
+    );
+
+    return saved;
   }
 
   async findExistingOrder(
@@ -132,6 +146,11 @@ export class OrderService {
       return orderRepo.save(order);
     });
 
+    this.eventEmitter.emit(
+      'user.purchase_approved',
+      new UserPurchaseApprovedEvent(approvedOrder.userId),
+    );
+
     const [user, product, settings] = await Promise.all([
       this.dataSource
         .getRepository(User)
@@ -146,7 +165,8 @@ export class OrderService {
 
     if (!user) {
       approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
+      approvedOrder.notificationAttemptStatus =
+        NotificationAttemptStatus.FAILED;
       approvedOrder.notificationFailureReason = 'USER_NOT_FOUND';
       return this.orderRepo.save(approvedOrder);
     }
@@ -178,92 +198,132 @@ export class OrderService {
       },
     };
 
-    
-  // NotificationPreference: EMAIL
-  if (preference === NotificationPreference.EMAIL) {
-    if (!user.email) {
-      approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
-      approvedOrder.notificationFailureReason = 'NO_CONTACT: user has no email';
+    // NotificationPreference: EMAIL
+    if (preference === NotificationPreference.EMAIL) {
+      if (!user.email) {
+        approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
+        approvedOrder.notificationAttemptStatus =
+          NotificationAttemptStatus.FAILED;
+        approvedOrder.notificationFailureReason =
+          'NO_CONTACT: user has no email';
+        return this.orderRepo.save(approvedOrder);
+      }
+
+      try {
+        await this.notificationsQueue.add(
+          'send_notification',
+          {
+            orderId: approvedOrder.id,
+            userId: approvedOrder.userId,
+            type: 'EMAIL',
+            payload: emailPayload,
+          },
+          {
+            attempts: 5,
+            backoff: { type: 'exponential', delay: 1000 },
+            removeOnComplete: true,
+            removeOnFail: false,
+          },
+        );
+
+        approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
+        approvedOrder.notificationAttemptStatus =
+          NotificationAttemptStatus.PENDING;
+        approvedOrder.notificationFailureReason = null;
+      } catch (err) {
+        approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
+        approvedOrder.notificationAttemptStatus =
+          NotificationAttemptStatus.FAILED;
+        approvedOrder.notificationFailureReason =
+          extractAxiosFailureReason(err);
+      }
       return this.orderRepo.save(approvedOrder);
     }
 
-    try {
-      await this.notificationClient.sendEmail(emailPayload);
-      approvedOrder.notificationStatus = NotificationStatus.SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.SUCCESS;
-      approvedOrder.notificationFailureReason = null;
-    } catch (err) {
+    // NotificationPreference: SMS
+    if (preference === NotificationPreference.SMS) {
+      const phoneNumber = user.phoneNumber;
+      if (!phoneNumber) {
+        approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
+        approvedOrder.notificationAttemptStatus =
+          NotificationAttemptStatus.FAILED;
+        approvedOrder.notificationFailureReason =
+          'NO_CONTACT: user has no phoneNumber';
+        return this.orderRepo.save(approvedOrder);
+      }
+
+      const smsPayload = {
+        toPhoneNumber: phoneNumber,
+        message: `Purchase successful. Order: ${approvedOrder.id}. Product: ${productName}.`,
+      };
+
+      await this.notificationsQueue.add(
+        'send_notification',
+        {
+          orderId: approvedOrder.id,
+          userId: approvedOrder.userId,
+          type: 'SMS',
+          payload: smsPayload,
+        },
+        {
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 1000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+
       approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
-      approvedOrder.notificationFailureReason = extractAxiosFailureReason(err);
-    }
+      approvedOrder.notificationAttemptStatus =
+        NotificationAttemptStatus.PENDING;
+      approvedOrder.notificationFailureReason = null;
 
-    return this.orderRepo.save(approvedOrder);
-  }
-
-  // NotificationPreference: SMS
-  if (preference === NotificationPreference.SMS) {
-    const phoneNumber = user.phoneNumber;
-    if (!phoneNumber) {
-      approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
-      approvedOrder.notificationFailureReason = 'NO_CONTACT: user has no phoneNumber';
       return this.orderRepo.save(approvedOrder);
     }
 
-    // make it template 
-    const smsPayload = {
-      toPhoneNumber: phoneNumber,
-      message: `Purchase successful. Order: ${approvedOrder.id}. Product: ${productName}.`,
-    };
+    // NotificationPreference: ALL
+    if (preference === NotificationPreference.ALL) {
+      const phoneNumber = user.phoneNumber;
+      if (!user.email || !phoneNumber) {
+        approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
+        approvedOrder.notificationAttemptStatus =
+          NotificationAttemptStatus.FAILED;
+        approvedOrder.notificationFailureReason =
+          'NO_CONTACT: missing email or phoneNumber';
+        return this.orderRepo.save(approvedOrder);
+      }
 
-    try {
-      await this.notificationClient.sendSms(smsPayload);
-      approvedOrder.notificationStatus = NotificationStatus.SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.SUCCESS;
-      approvedOrder.notificationFailureReason = null;
-    } catch (err) {
+      const smsPayload = {
+        toPhoneNumber: phoneNumber,
+        message: `Purchase successful. Order: ${approvedOrder.id}. Product: ${productName}.`,
+      };
+
+      await this.notificationsQueue.add(
+        'send_notification',
+        {
+          orderId: approvedOrder.id,
+          userId: approvedOrder.userId,
+          type: 'ALL',
+          payload: {
+            email: emailPayload,
+            sms: smsPayload,
+          },
+        },
+        {
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 1000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+
       approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
-      approvedOrder.notificationFailureReason = extractAxiosFailureReason(err);
-    }
+      approvedOrder.notificationAttemptStatus =
+        NotificationAttemptStatus.PENDING;
+      approvedOrder.notificationFailureReason = null;
 
-    return this.orderRepo.save(approvedOrder);
-  }
-
-  // NotificationPreference: ALL
-  if (preference === NotificationPreference.ALL) {
-    const phoneNumber = user.phoneNumber;
-    if (!user.email || !phoneNumber) {
-      approvedOrder.notificationStatus = NotificationStatus.NO_CONTACT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
-      approvedOrder.notificationFailureReason = 'NO_CONTACT: missing email or phoneNumber';
       return this.orderRepo.save(approvedOrder);
     }
-
-    const smsPayload = {
-      toPhoneNumber: phoneNumber,
-      message: `Purchase successful. Order: ${approvedOrder.id}. Product: ${productName}.`,
-    };
-
-    try {
-      await Promise.all([
-        this.notificationClient.sendEmail(emailPayload),
-        this.notificationClient.sendSms(smsPayload),
-      ]);
-
-      approvedOrder.notificationStatus = NotificationStatus.SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.SUCCESS;
-      approvedOrder.notificationFailureReason = null;
-    } catch (err) {
-      approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
-      approvedOrder.notificationAttemptStatus = NotificationAttemptStatus.FAILED;
-      approvedOrder.notificationFailureReason = extractAxiosFailureReason(err);
-    }
-
-    return this.orderRepo.save(approvedOrder);
-  }
 
     // احتياط
     approvedOrder.notificationStatus = NotificationStatus.NOT_SENT;
