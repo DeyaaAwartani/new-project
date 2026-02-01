@@ -3,17 +3,18 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  Index,
   OneToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 
+@Unique('UQ_wallets_userId', ['userId'])
 @Entity('wallets')
 export class Wallet {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column()
   userId: number;
 
   // One wallet per user

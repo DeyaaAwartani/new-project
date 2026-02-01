@@ -25,6 +25,8 @@ import { UserInteractionModule } from './user-interaction/user-interaction.modul
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationsQueueModule } from './notifications-queue/notifications-queue.module';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { ExpressAdapter } from '@bull-board/express';
 
 @Module({
   imports: [
@@ -49,6 +51,11 @@ import { NotificationsQueueModule } from './notifications-queue/notifications-qu
         host: '127.0.0.1',
         port: 6379,
       },
+    }),
+    // ✅ Bull Board dashboard
+    BullBoardModule.forRoot({
+      route: '/bull-board',
+      adapter: ExpressAdapter,
     }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),

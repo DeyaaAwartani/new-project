@@ -53,6 +53,7 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  // put index if we have dashboard admin to see latest users
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 

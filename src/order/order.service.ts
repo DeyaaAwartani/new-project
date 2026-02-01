@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,7 +24,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserOrderCreatedEvent } from 'src/common/events/user-order-created.event';
 import { UserPurchaseApprovedEvent } from 'src/common/events/user-purchase-approved.event';
 import { InjectQueue } from '@nestjs/bullmq';
-import { delay, Queue } from 'bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class OrderService {
@@ -220,8 +219,8 @@ export class OrderService {
           },
           {
             attempts: 5,
-            backoff: { type: 'exponential', delay: 1000 },
-            removeOnComplete: true,
+            backoff: { type: 'exponential', delay: 30000 },
+            removeOnComplete: false,
             removeOnFail: false,
           },
         );
@@ -267,8 +266,8 @@ export class OrderService {
         },
         {
           attempts: 5,
-          backoff: { type: 'exponential', delay: 1000 },
-          removeOnComplete: true,
+          backoff: { type: 'exponential', delay: 30000 },
+          removeOnComplete: false,
           removeOnFail: false,
         },
       );
@@ -311,8 +310,8 @@ export class OrderService {
         },
         {
           attempts: 5,
-          backoff: { type: 'exponential', delay: 1000 },
-          removeOnComplete: true,
+          backoff: { type: 'exponential', delay: 30000 },
+          removeOnComplete: false,
           removeOnFail: false,
         },
       );

@@ -1,5 +1,11 @@
 import { Order } from 'src/order/order.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  Index,
+} from 'typeorm';
 
 @Entity('products')
 export class Product {
@@ -9,6 +15,7 @@ export class Product {
   @OneToMany(() => Order, (order) => order.product)
   orders: Order[];
 
+  @Index('IDX_products_label')
   @Column()
   label: string;
 
@@ -18,6 +25,10 @@ export class Product {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 }

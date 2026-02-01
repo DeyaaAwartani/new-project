@@ -6,15 +6,24 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  Index,
+  Unique,
 } from 'typeorm';
 import { ServiceTypeEntity } from 'src/service_types/service_types.entity';
 import { BillingPeriod } from './enums/billing-period.enum';
 
+@Unique('UQ_pricing_type_currency_period_count', [
+  'serviceTypeId',
+  'currency',
+  'period',
+  'periodCount',
+])
 @Entity('service_pricing')
 export class ServicePricingEntity {
   @PrimaryGeneratedColumn()
   id: string;
 
+  @Index('IDX_service_pricing_serviceTypeId')
   @Column({ type: 'int' })
   serviceTypeId: number;
 

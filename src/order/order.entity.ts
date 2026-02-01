@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +14,7 @@ import { ApprovedByType } from './enums/approved-by-type.enum';
 import { NotificationStatus } from './enums/notification-status.enum';
 import { NotificationAttemptStatus } from './enums/notification-attempt-status.enum';
 
+@Index('IDX_orders_user_created', ['userId', 'createdAt'])
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn()
@@ -68,6 +70,7 @@ export class Order {
   @Column({ type: 'enum', enum: AutoFailureReason, nullable: true })
   autoFailureReason: AutoFailureReason | null;
 
+  @Index('IDX_orders_created')
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 

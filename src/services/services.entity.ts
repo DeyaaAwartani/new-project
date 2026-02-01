@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { ServiceCategoryEntity } from 'src/service_categories/service_categories.entity';
 import { ServiceTypeEntity } from 'src/service_types/service_types.entity';
@@ -16,6 +17,7 @@ export class ServiceEntity {
   @PrimaryGeneratedColumn()
   id: string;
 
+  @Index('IDX_services_categoryId')
   @Column({ type: 'int' })
   categoryId: number;
 

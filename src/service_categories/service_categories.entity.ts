@@ -5,9 +5,11 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Unique,
 } from 'typeorm';
-import { ServiceEntity } from 'src/services/services.entity'; 
+import { ServiceEntity } from 'src/services/services.entity';
 
+@Unique('UQ_service_categories_name', ['name'])
 @Entity('service_categories')
 export class ServiceCategoryEntity {
   @PrimaryGeneratedColumn()
