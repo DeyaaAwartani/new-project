@@ -27,6 +27,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { NotificationsQueueModule } from './notifications-queue/notifications-queue.module';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
+import { RealtimeModule } from './real-time/realtime.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ExpressAdapter } from '@bull-board/express';
     }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    RealtimeModule,
     NotificationsQueueModule,
     AuthModule,
     UsersModule,

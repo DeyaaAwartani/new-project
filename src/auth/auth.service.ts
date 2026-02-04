@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -10,13 +11,18 @@ import { User } from '../users/users.entity';
 import { CurrentUserType } from '../common/types/current-user.type';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserLoggedInEvent } from 'src/common/events/user-logged-in.event';
+import { WalletService } from 'src/wallet/wallet.service';
+import { RealtimeGateway } from 'src/real-time/realtime.gateway';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(WalletService.name);
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   private generateTokens(user: User) {
@@ -74,8 +80,12 @@ export class AuthService {
         const { accessToken, refreshToken } = this.generateTokens(user);
         this.eventEmitter.emit(
           'user.logged_in',
-          new UserLoggedInEvent(user.id,user.role),
+          new UserLoggedInEvent(user.id, user.role),
         );
+        this.realtimeGateway.emitUserOnline({
+          userId: user.id,
+          email: user.email,
+        });
         return {
           user: result,
           accessToken,

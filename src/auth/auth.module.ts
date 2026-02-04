@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { UsersModule } from '../users/users.module';
+import { RealtimeModule } from 'src/real-time/realtime.module';
 
 @Global()
 @Module({
@@ -14,6 +15,7 @@ import { UsersModule } from '../users/users.module';
       secret: process.env.JWT_SECRET || 'your-secret-key',
       signOptions: { expiresIn: '15m' },
     }),
+    RealtimeModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard],

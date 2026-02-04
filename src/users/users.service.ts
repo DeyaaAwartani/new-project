@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +14,8 @@ import { UserRole } from '../auth/enums/user-role.enum';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -24,6 +27,7 @@ export class UsersService {
     });
 
     if (existingUser) {
+      this.logger.warn(`Email already exists`);
       throw new ConflictException('Email already exists');
     }
 
@@ -39,7 +43,11 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+
+    this.logger.log(`User registered success userId=${saved.id}`);
+
+    return saved;
   }
 
   async findAll(): Promise<User[]> {
@@ -87,7 +95,7 @@ export class UsersService {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
 
-    updateUserDto.phoneNumber = normalizeJordanPhone(updateUserDto.phoneNumber);//normalizePhone
+    updateUserDto.phoneNumber = normalizeJordanPhone(updateUserDto.phoneNumber); //normalizePhone
 
     Object.assign(user, updateUserDto);
     return this.usersRepository.save(user);
@@ -120,4 +128,3 @@ export class UsersService {
 function normalizeJordanPhone(phoneNumber: any): string | undefined {
   throw new Error('Function not implemented.');
 }
-
